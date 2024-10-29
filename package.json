@@ -1,0 +1,18 @@
+{
+  "name": "wstudio-shortcut",
+  "version": "1.0.0",
+  "description": "A native module for keyboard and mouse shortcuts in Electron",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "configure": "node-gyp configure",
+    "build": "node-gyp build",
+    "update": "node-gyp rebuild"
+  },
+  "gypfile": true,
+  "author": "Ricardo Santos",
+  "license": "MIT",
+  "dependencies": {
+    "node-addon-api": "^8.2.1"
+  }
+}

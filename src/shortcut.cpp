@@ -221,10 +221,15 @@ namespace Shortcut
             default: return CallNextHookEx(NULL, nCode, wParam, lParam);
             }
 
-            std::lock_guard<std::mutex> lock(eventMutex);
-            eventQueue.emplace_back(
-                (wParam == WM_LBUTTONDOWN || wParam == WM_RBUTTONDOWN || wParam == WM_MBUTTONDOWN || wParam == WM_XBUTTONDOWN) ? EventType::MouseDown : EventType::MouseUp,
-                mouseButton);
+            // Adiciona a verificação para a tecla monitorada
+            std::lock_guard<std::mutex> keyLock(monitoredKeyMutex);
+            if (monitoredKey == 0 || mouseButton == monitoredKey)
+            {
+                std::lock_guard<std::mutex> lock(eventMutex);
+                eventQueue.emplace_back(
+                    (wParam == WM_LBUTTONDOWN || wParam == WM_RBUTTONDOWN || wParam == WM_MBUTTONDOWN || wParam == WM_XBUTTONDOWN) ? EventType::MouseDown : EventType::MouseUp,
+                    mouseButton);
+            }
         }
         return CallNextHookEx(NULL, nCode, wParam, lParam);
     }

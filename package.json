@@ -1,6 +1,6 @@
 {
   "name": "wstudio-shortcut",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A native module for keyboard and mouse shortcuts in Electron",
   "main": "index.js",
   "types": "index.d.ts",

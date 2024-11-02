@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include <set>
 #include <string>
-#include <vector>
+#include <deque>  // Usando deque em vez de vector
 #include <mutex>
 
 namespace Shortcut
@@ -57,10 +57,10 @@ namespace Shortcut
     static EventCallback userCallback;
     static unsigned int monitoredKey = 0;
     static std::set<int> pressedKeys;
-    static std::vector<std::pair<EventType, int>> eventQueue;
-    static std::mutex eventMutex; // Mutex para proteger a fila de eventos
-    static std::mutex pressedKeysMutex; // Mutex para proteger pressedKeys
-    static std::mutex monitoredKeyMutex; // Mutex para proteger monitoredKey
+    static std::deque<std::pair<EventType, int>> eventQueue; // Usando deque
+    static std::mutex eventMutex;
+    static std::mutex pressedKeysMutex;
+    static std::mutex monitoredKeyMutex;
     static UINT_PTR timerId = 0;
 
     std::string GetErrorMessage(DWORD error)
@@ -77,12 +77,19 @@ namespace Shortcut
 
     void ProcessEventQueue()
     {
-        std::lock_guard<std::mutex> lock(eventMutex);
-        for (const auto& event : eventQueue)
+        std::deque<std::pair<EventType, int>> localQueue;
+
+        {
+            // Bloqueio mínimo: apenas para copiar a fila de eventos
+            std::lock_guard<std::mutex> lock(eventMutex);
+            localQueue.swap(eventQueue); // Swap rápido da fila
+        }
+
+        // Processa eventos fora do bloqueio
+        for (const auto& event : localQueue)
         {
             userCallback(event.first, event.second);
         }
-        eventQueue.clear();
     }
 
     void CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)

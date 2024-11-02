@@ -4,14 +4,16 @@
 // Callback global para o evento
 Napi::ThreadSafeFunction tsCallback;
 
-// Função que vai enviar os eventos para o lado JavaScript
+// Função que envia os eventos para o lado JavaScript de forma assíncrona
 void EventCallback(Shortcut::EventType type, int code)
 {
     if (tsCallback)
     {
-        tsCallback.BlockingCall([type, code](Napi::Env env, Napi::Function jsCallback)
-                                { jsCallback.Call({Napi::Number::New(env, static_cast<int>(type)),
-                                                   Napi::Number::New(env, code)}); });
+        tsCallback.NonBlockingCall([type, code](Napi::Env env, Napi::Function jsCallback)
+        {
+            jsCallback.Call({Napi::Number::New(env, static_cast<int>(type)),
+                             Napi::Number::New(env, code)});
+        });
     }
 }
 
@@ -20,6 +22,7 @@ Napi::Value StartListening(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
+    // Validação: Verificar se o primeiro argumento é uma função
     if (!info[0].IsFunction())
     {
         Napi::TypeError::New(env, "Expected a function as the first argument").ThrowAsJavaScriptException();
@@ -38,6 +41,13 @@ Napi::Value StartListening(const Napi::CallbackInfo &info)
     if (info.Length() > 1 && info[1].IsNumber())
     {
         specificKey = info[1].As<Napi::Number>().Int32Value();
+
+        // Validação: Garantir que o código da tecla seja um valor válido (exemplo: intervalo 0-255)
+        if (specificKey < 0 || specificKey > 255)
+        {
+            Napi::RangeError::New(env, "Invalid key code. Must be between 0 and 255.").ThrowAsJavaScriptException();
+            return env.Null();
+        }
     }
 
     Shortcut::startListening(EventCallback, specificKey);

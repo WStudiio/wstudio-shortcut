@@ -6,7 +6,6 @@
 
 namespace Shortcut
 {
-
     enum class EventType
     {
         KeyDown,
